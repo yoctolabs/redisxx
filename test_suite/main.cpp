@@ -4,3 +4,4 @@
 
 #include <test_suite/common.hpp>
 #include <test_suite/error.hpp>
+#include <test_suite/reply.hpp>

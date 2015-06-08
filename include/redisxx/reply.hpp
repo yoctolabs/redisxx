@@ -15,6 +15,9 @@
 namespace redis {
 
 class Reply {
+
+	friend bool operator==(Reply const & lhs, Reply const & rhs);
+
 	private:
 		ReplyType type;
 		
@@ -22,45 +25,79 @@ class Reply {
 		std::string string; // for error and string reply
 		std::vector<Reply> array; // for array reply
 		
-	public:
-		/// Construct a new null-reply
-		/**
-		 *	Creates a new reply with null-content.
-		 */
-		Reply()
-			: type{ReplyType::Null} {
-		}
-		
-		/// Construct a new status-reply
-		/**
-		 *	Creates a new reply with the given status.
-		 *	@param status Determines whether previous query returned "OK" or not
-		 */
-		Reply(bool status)
-			: type{ReplyType::Status}
-			, status{status} {
-		}
-		
-		/// Construct a new string- or error-reply
-		/**
-		 *	Creates a new reply with the given string. This is used for string-
-		 *	replies as well as error-replies.
-		 *	@param string String-content of the reply
-		 *	@param error Determines whether the string is an error string or not
-		 */
-		Reply(std::string const & string, bool error=false)
-			: type{error ? ReplyType::Error : ReplyType::String}
-			, string{string} {
-		}
-		
-		/// Construct a new array-reply
-		/**
-		 *	Creates a new reply with an array of other replies.
-		 *	@param array Reply-array containing sub-replies
-		 */
-		Reply(std::vector<Reply> const & array)
-			: type{ReplyType::Array}
+		Reply(ReplyType type, bool status, std::string const & string, std::vector<Reply> const & array)
+			: type{type}
+			, status{status}
+			, string{string}
 			, array{array} {
+		}
+		
+		Reply(ReplyType type, bool status, std::string const & string, std::vector<Reply>&& array)
+			: type{type}
+			, status{status}
+			, string{string}
+			, array{std::move(array)} {
+		}
+	
+	public:
+		/// Factory method for null-reply
+		/**
+		 *	This calls the private constructor.
+		 *	@return Reply instance
+		 */
+		static Reply createNull() {
+			return {ReplyType::Null, false, "", {}};
+		}
+		
+		/// Factory method for status-reply
+		/**
+		 *	This calls the private constructor.
+		 *	@param status Status of the reply
+		 *	@return Reply instance
+		 */
+		static Reply createStatus(bool status) {
+			return {ReplyType::Status, status, "", {}};
+		}
+		
+		/// Factory method for string-reply
+		/**
+		 *	This calls the private constructor.
+		 *	@param string Message of the reply
+		 *	@return Reply instance
+		 */
+		static Reply createString(std::string const & string) {
+			return {ReplyType::String, false, string, {}};
+		}
+		
+		/// Factory method for error-reply
+		/**
+		 *	This calls the private constructor.
+		 *	@param string Error message of the reply
+		 *	@return Reply instance
+		 */
+		static Reply createError(std::string const & string) {
+			return {ReplyType::Error, false, string, {}};
+		}
+		
+		/// Factory method for array-reply
+		/**
+		 *	This calls the private constructor.
+		 *	@param array Array of sub-replies
+		 *	@return Reply instance
+		 */
+		static Reply createArray(std::vector<Reply> const & array) {
+			return {ReplyType::Array, false, "", array};
+		}
+		
+		/// Factory method overload for array-reply
+		/**
+		 *	This calls the private constructor. This overload provides moving
+		 *	an array "in".
+		 *	@param array Array of sub-replies
+		 *	@return Reply instance
+		 */
+		static Reply createArray(std::vector<Reply>&& array) {
+			return {ReplyType::Array, false, "", std::move(array)};
 		}
 		
 		/// Query the reply type
@@ -111,8 +148,8 @@ class Reply {
 		 */
 		std::string const & getString() const {
 			switch (type) {
-				case ReplyType::string:
-				case ReplyType::error:
+				case ReplyType::String:
+				case ReplyType::Error:
 					return string;
 				
 				default:
@@ -128,7 +165,7 @@ class Reply {
 		 *	@throw ReplyError If precondition is violated
 		 */
 		std::vector<Reply> const & getArray() const {
-			if (type != ReplyType::array) {
+			if (type != ReplyType::Array) {
 				throw ReplyError({ReplyType::Array}, type);
 			}
 			
@@ -146,13 +183,27 @@ class Reply {
 		 *	@throw std::out_of_range If index is invalid
 		 */
 		Reply const & operator[](std::size_t index) const {
-			if (type != ReplyType::array) {
+			if (type != ReplyType::Array) {
 				throw ReplyError({ReplyType::Array}, type);
 			}
 			
 			return array.at(index);
 		}
 		
+};
+
+/// Comparison operator
+/**
+ *	Two replies equal if their types and the corresponding properties equal.
+ *	@param lhs Left-hand-side instance
+ *	@param rhs Right-hand-side instance
+ *	@return true if both replies are equal
+ */
+bool operator==(Reply const & lhs, Reply const & rhs) {
+	return (lhs.type == rhs.type
+		&& lhs.status == rhs.status
+		&& lhs.string == rhs.string
+		&& lhs.array == rhs.array);
 }
 
 } // ::redis
