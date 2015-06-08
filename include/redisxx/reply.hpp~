@@ -20,7 +20,7 @@ class Reply {
 		
 		bool status;
 		std::string string; // for error and string reply
-		std::vector<Reply> array; // for array reply
+		std::vector<Reply>; // for array reply
 		
 	public:
 		/// tba: doc
