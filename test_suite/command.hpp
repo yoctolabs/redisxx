@@ -1,5 +1,6 @@
 #include <map>
 #include <vector>
+#include <set>
 #include <string>
 #include <boost/test/included/unit_test.hpp>
 
@@ -7,11 +8,7 @@
 
 BOOST_AUTO_TEST_CASE(command_string_api) {
 	redis::Command cmd("set", "foo", "bar");
-	auto& buf = *cmd;
-	BOOST_REQUIRE(buf.size() == 3u);
-	BOOST_REQUIRE(buf[0] == "set");
-	BOOST_REQUIRE(buf[1] == "foo");
-	BOOST_REQUIRE(buf[2] == "bar");
+	BOOST_REQUIRE(*cmd == "set foo bar");
 }
 
 BOOST_AUTO_TEST_CASE(command_map_api) {
@@ -19,39 +16,27 @@ BOOST_AUTO_TEST_CASE(command_map_api) {
 	data["asdf"] = 12;
 	data["qwertz"] = -23;
 	redis::Command cmd("hmset", "test", data);
-	auto& buf = *cmd;
-	BOOST_REQUIRE(buf.size() == 6u);
-	BOOST_REQUIRE(buf[0] == "hmset");
-	BOOST_REQUIRE(buf[1] == "test");
-	BOOST_REQUIRE(buf[2] == "asdf");
-	BOOST_REQUIRE(buf[3] == "12");
-	BOOST_REQUIRE(buf[4] == "qwertz");
-	BOOST_REQUIRE(buf[5] == "-23");
+	BOOST_REQUIRE(*cmd == "hmset test asdf 12 qwertz -23");
 	
 	cmd << "another" << "pair";
-	BOOST_REQUIRE(buf.size() == 8u);
-	BOOST_REQUIRE(buf[6] == "another");
-	BOOST_REQUIRE(buf[7] == "pair");
+	BOOST_REQUIRE(*cmd == "hmset test asdf 12 qwertz -23 another pair");
 }
 
-BOOST_AUTO_TEST_CASE(command_vector_api) {
+BOOST_AUTO_TEST_CASE(command_sequence_api) {
 	std::vector<float> data{3.14f, 1.414f, -0.234f};
 	redis::Command cmd("sadd", "new", data);
-	auto& buf = *cmd;
-	BOOST_REQUIRE(buf.size() == 5u);
-	BOOST_REQUIRE(buf[0] == "sadd");
-	BOOST_REQUIRE(buf[1] == "new");
-	// @note: std::to_string() on float isn't that good :S
-	/*
-	BOOST_REQUIRE(buf[2] == "3.14f");
-	BOOST_REQUIRE(buf[3] == "1.414f");
-	BOOST_REQUIRE(buf[4] == "-0.234f");
-	*/
-	
+	BOOST_REQUIRE(*cmd == "sadd new 3.140000 1.414000 -0.234000");
+
 	cmd << 12l << "helloWorld" << 0;
-	BOOST_REQUIRE(buf.size() == 8u);
-	BOOST_REQUIRE(buf[5] == "12");
-	BOOST_REQUIRE(buf[6] == "helloWorld");
-	BOOST_REQUIRE(buf[7] == "0");
+	BOOST_REQUIRE(*cmd == "sadd new 3.140000 1.414000 -0.234000 12 helloWorld 0");
+}
+
+BOOST_AUTO_TEST_CASE(command_set_api) {
+	std::set<std::string> data{"bob", "max", "susi"};
+	redis::Command cmd("sadd", "users", data);
+	BOOST_REQUIRE(*cmd == "sadd users bob max susi");
+
+	cmd << "carl" << "red" << "chris";
+	BOOST_REQUIRE(*cmd == "sadd users bob max susi carl red chris");
 }
 

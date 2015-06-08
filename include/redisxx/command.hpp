@@ -16,124 +16,89 @@ namespace redis {
 namespace priv {
 
 // ----------------------------------------------------------------------------
-// API to determine number of strings in a command
+// API to dump various types to std::string
 
-inline std::size_t get_size(std::string const & string) {
-	// trivial case
-	return 1u;
+// dump a string to a string (aka most simple case for dumping values)
+inline std::string dump(std::string const & string) {
+	return string;
 }
 
 // dump any arithmetic type to a string
 template <typename T>
-typename std::enable_if<std::is_arithmetic<T>::value, std::size_t>::type
-get_size(T value) {
-	// also trivial case
-	return 1u;
+typename std::enable_if<std::is_arithmetic<T>::value, std::string>::type
+dump(T value) {
+	return std::to_string(value);
 }
 
+// dump any map type to a string: "<key> <value> <key> <value> [...]"
 template <typename T>
-typename std::enable_if<is_map<T>::value, std::size_t>::type
-get_size(T const & map) {
-	// key and value count seperate
-	return map.size() * 2u;
-}
-
-template <typename T>
-typename std::enable_if<is_set<T>::value, std::size_t>::type
-get_size(T const & set) {
-	// per element
-	return set.size();
-}
-
-template <typename T>
-typename std::enable_if<is_sequence<T>::value, std::size_t>::type
-get_size(T const & sequence) {
-	// per element
-	return sequence.size();
-}
-
-// ----------------------------------------------------------------------------
-// API to append data to target vector
-
-// handle a string (trivial case)
-inline void append(std::vector<std::string>& out, std::string const & string) {
-	out.push_back(string);
-}
-
-// handle any arithmetic type
-template <typename T>
-typename std::enable_if<std::is_arithmetic<T>::value, void>::type
-append(std::vector<std::string>& out, T value) {
-	append(out, std::to_string(value));
-}
-
-// handle any map type
-template <typename T>
-typename std::enable_if<is_map<T>::value, void>::type
-append(std::vector<std::string>& out, T const & map) {
-	// append each pair)
+typename std::enable_if<is_map<T>::value, std::string>::type
+dump(T const & map) {
+	std::string s;
 	for (auto const & pair: map) {
-		append(out, pair.first);
-		append(out, pair.second);
+		if (!s.empty()) {
+			s += " ";
+		}
+		s += dump(pair.first) + " " + dump(pair.second);
 	}
+	return s;
 }
 
-// handle any set type
+// dump any set type to a string "<value> <value> [...]"
 template <typename T>
-typename std::enable_if<is_set<T>::value, void>::type
-append(std::vector<std::string>& out, T const & set) {
-	// append each element
+typename std::enable_if<is_set<T>::value, std::string>::type
+dump(T const & set) {
+	std::string s;
 	for (auto const & value: set) {
-		append(out, value);
+		if (!s.empty()) {
+			s += " ";
+		}
+		s += dump(value);
 	}
+	return s;
 }
 
-// handle any sequence type
+// dump any sequence type to a string "<value> <value> [...]"
 template <typename T>
-typename std::enable_if<is_sequence<T>::value, void>::type
-append(std::vector<std::string>& out, T const & sequence) {
-	// append each element
+typename std::enable_if<is_sequence<T>::value, std::string>::type
+dump(T const & sequence) {
+	std::string s;
 	for (auto const & value: sequence) {
-		append(out, value);
+		if (!s.empty()) {
+			s += " ";
+		}
+		s += dump(value);
 	}
+	return s;
 }
 
 // ---------------------------------------------------------------------------
-// Helper API to parse variadic arguments
 
 // base definition of each command
 template <typename... Tail>
-struct CmdArgs;
+struct CommandParser;
 
 // recursive definition of each command
 template <typename Head, typename... Tail>
-struct CmdArgs<Head, Tail...> {
+struct CommandParser<Head, Tail...> {
 	
-	static inline std::size_t count(Head&& head, Tail&& ...tail) {
-		// count actual number of elements in argument list
-		return get_size(std::forward<Head>(head))
-			+ CmdArgs<Tail...>::count(std::forward<Tail>(tail)...);
-	}
-	
-	static inline void process(std::vector<std::string>& out, Head&& head, Tail&& ...tail) {
-		// append head to vector
-		append(out, std::forward<Head>(head));
+	static inline void process(std::string& out, Head&& head, Tail&& ...tail) {
+		// push head to array
+		if (!out.empty()) {
+			out += " ";
+		}
+		out += dump(std::forward<Head>(head));
 		// process tail
-		CmdArgs<Tail...>::process(out, std::forward<Tail>(tail)...);
+		CommandParser<Tail...>::process(out, std::forward<Tail>(tail)...);
 	}
 	
 };
 
 // recursion base case of each command
 template <>
-struct CmdArgs<> {
+struct CommandParser<> {
 	
-	static inline std::size_t count() {
-		// nothing left to count
-		return 0u;
-	}
-	
-	static inline void process(std::vector<std::string>& out) {
+	static inline void process(std::string& out) {
 		// nothing left to append
 		return;
 	}
@@ -151,34 +116,56 @@ class Command {
 	friend Command& operator<<(Command& cmd, T&& value);
 	
 	private:
-		using buffer = std::vector<std::string>;
-		
-		buffer elems;
+		// internal buffer
+		std::string buffer;
 		
 	public:
-		/// Create command with given arguments
+		/// Construct a new command
 		/**
-		 *	@param args variadic list of arguments used to construct the command
+		 *	The ctor can handle a variadic list of arguments, dumps them to
+		 *	string and concatenates those strings. Passing arguments of multiple
+		 *	types is supported here.
+		 *	Supported types are: primitive types (int, float etc.), std::string,
+		 *	std::vector<>, std::list<>, std::(unordered_)map<> and
+		 *	std::(unordered_)set<> of those supported types.
+		 *
+		 *	@param ...args variadic list of arguments
 		 */
 		template <typename ...Args>
 		Command(Args&& ...args) {
-			// count actual arguments to reserve enough memory at once
-			std::size_t size = priv::CmdArgs<Args...>::count(std::forward<Args>(args)...);
-			elems.reserve(size);
-			// process entire argument list
-			priv::CmdArgs<Args...>::process(elems, std::forward<Args>(args)...);
+			priv::CommandParser<Args...>::process(buffer, std::forward<Args>(args)...);
 		}
 		
-		buffer const & operator*() const {
-			return elems;
+		/// Return internal buffer
+		/**
+		 *	This method can be used to const-access the command buffer. All
+		 *	passed arguments were appended to it, each argument is seperated by
+		 *	whitespaces.
+		 *
+		 *	@return const-reference to the internal buffer.
+		 */
+		std::string const & operator*() const {
+			return buffer;
 		}
 };
 
-/// Add another argument to a command
+/// Append another value to the command
+/**
+ *	This method appends a value of a generic type to the given command. The
+ *	supported types are the same as used for the ctor of `Command`:
+ *	primitive types (int, float etc.), std::string, std::vector<>, std::list<>,
+ *	std::(unordered_)map<> and std::(unordered_)set<> of those supported types.
+ *
+ *	@param cmd Command to append the argument to
+ *	@param value Value to append to the command
+ *	@param return The given command.
+ */
 template <typename T>
-Command& operator<<(Command& cmd, T&& arg) {
-	// append single argument
-	priv::append(cmd.elems, std::forward<T>(arg));
+Command& operator<<(Command& cmd, T&& value) {
+	if (!cmd.buffer.empty()) {
+		cmd.buffer += " ";
+	}
+	cmd.buffer += priv::dump(std::forward<T>(value));
 	return cmd;
 }
 
