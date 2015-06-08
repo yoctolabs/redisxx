@@ -73,3 +73,16 @@ BOOST_AUTO_TEST_CASE(reply_array) {
 	BOOST_CHECK_THROW(reply[4], std::out_of_range);
 }
 
+BOOST_AUTO_TEST_CASE(reply_integer) {
+	auto reply = redis::Reply::createInteger(123u);
+	BOOST_REQUIRE(reply.getType() == redis::ReplyType::Integer);
+	BOOST_CHECK(reply.getInteger<int>() == 123);
+	BOOST_CHECK(reply.getInteger<unsigned long>() == 123ul);
+	
+	BOOST_CHECK_THROW(reply.getSize(), redis::ReplyError);
+	BOOST_CHECK_THROW(reply.getStatus(), redis::ReplyError);
+	BOOST_CHECK_THROW(reply.getString(), redis::ReplyError);
+	BOOST_CHECK_THROW(reply.getArray(), redis::ReplyError);
+	BOOST_CHECK_THROW(reply[0], redis::ReplyError);
+}
+

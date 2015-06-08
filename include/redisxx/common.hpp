@@ -13,7 +13,7 @@
 namespace redis {
 
 enum class ReplyType {
-	Null, Status, Error, String, Array
+	Null, Status, Error, String, Array, Integer
 };
 
 // ----------------------------------------------------------------------------
@@ -33,6 +33,8 @@ std::string to_string(ReplyType type) {
 			return "array";
 		case ReplyType::Null:
 			return "null";
+		case ReplyType::Integer:
+			return "integer";
 	}
 }
 

@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(common_type2string) {
 	BOOST_CHECK(redis::priv::to_string(types) == "null, error or status");
 	
 	types.clear();
-	types.push_back(redis::ReplyType::Status);
-	BOOST_CHECK(redis::priv::to_string(types) == "status");
+	types.push_back(redis::ReplyType::Integer);
+	BOOST_CHECK(redis::priv::to_string(types) == "integer");
 }
 
