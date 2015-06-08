@@ -14,7 +14,7 @@ namespace redis {
 
 enum class ReplyType {
 	Null, Status, Error, String, Array
-}
+};
 
 // ----------------------------------------------------------------------------
 // API to debug-dump reply-type(s)
@@ -22,7 +22,7 @@ enum class ReplyType {
 namespace priv {
 
 std::string to_string(ReplyType type) {
-	switch (type):
+	switch (type) {
 		case ReplyType::Status:
 			return "status";
 		case ReplyType::Error:
@@ -33,6 +33,7 @@ std::string to_string(ReplyType type) {
 			return "array";
 		case ReplyType::Null:
 			return "null";
+	}
 }
 
 std::string to_string(std::vector<ReplyType> const & expected) {
@@ -41,7 +42,7 @@ std::string to_string(std::vector<ReplyType> const & expected) {
 		out += to_string(expected[i]);
 		if (i < expected.size() - 2u) {
 			out += ", ";
-		else if (i == expected.size() - 2u) {
+		} else if (i == expected.size() - 2u) {
 			out += " or ";
 		}
 	}
