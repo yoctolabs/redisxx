@@ -8,7 +8,7 @@
 
 BOOST_AUTO_TEST_CASE(command_string_api) {
 	redis::Command cmd("set", "foo", "bar");
-	BOOST_REQUIRE(*cmd == "set foo bar");
+	BOOST_CHECK(*cmd == "set foo bar");
 }
 
 BOOST_AUTO_TEST_CASE(command_map_api) {
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(command_map_api) {
 	BOOST_REQUIRE(*cmd == "hmset test asdf 12 qwertz -23");
 	
 	cmd << "another" << "pair";
-	BOOST_REQUIRE(*cmd == "hmset test asdf 12 qwertz -23 another pair");
+	BOOST_CHECK(*cmd == "hmset test asdf 12 qwertz -23 another pair");
 }
 
 BOOST_AUTO_TEST_CASE(command_sequence_api) {
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(command_sequence_api) {
 	BOOST_REQUIRE(*cmd == "sadd new 3.140000 1.414000 -0.234000");
 
 	cmd << 12l << "helloWorld" << 0;
-	BOOST_REQUIRE(*cmd == "sadd new 3.140000 1.414000 -0.234000 12 helloWorld 0");
+	BOOST_CHECK(*cmd == "sadd new 3.140000 1.414000 -0.234000 12 helloWorld 0");
 }
 
 BOOST_AUTO_TEST_CASE(command_set_api) {
@@ -37,6 +37,6 @@ BOOST_AUTO_TEST_CASE(command_set_api) {
 	BOOST_REQUIRE(*cmd == "sadd users bob max susi");
 
 	cmd << "carl" << "red" << "chris";
-	BOOST_REQUIRE(*cmd == "sadd users bob max susi carl red chris");
+	BOOST_CHECK(*cmd == "sadd users bob max susi carl red chris");
 }
 
