@@ -3,4 +3,4 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <test_suite/common.hpp>
-
+#include <test_suite/error.hpp>

@@ -37,6 +37,9 @@ std::string to_string(ReplyType type) {
 }
 
 std::string to_string(std::vector<ReplyType> const & expected) {
+	if (expected.size() == 1u) {
+		return to_string(expected[0]);
+	}
 	std::string out;
 	for (auto i = 0u; i < expected.size(); ++i) {
 		out += to_string(expected[i]);
