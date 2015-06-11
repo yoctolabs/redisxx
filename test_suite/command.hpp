@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(commandlist_transaction_api) {
 	redis::Command cmd1{"set", "foulish", "barrr"}, cmd2{"set", "lolish", "roflish"};
 	redis::CommandList list{redis::BatchType::Transaction};
 	list << cmd1;
-	BOOST_CHECK(*list == "$5MULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$4EXEC\r\n");
+	BOOST_CHECK(*list == "$5\r\nMULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$4\r\nEXEC\r\n");
 	
 	list << cmd2;
-	BOOST_CHECK(*list == "$5MULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$3\r\nset\r\n$6\r\nlolish\r\n$7\r\nroflish\r\n$4EXEC\r\n");
+	BOOST_CHECK(*list == "$5\r\nMULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$3\r\nset\r\n$6\r\nlolish\r\n$7\r\nroflish\r\n$4\r\nEXEC\r\n");
 }
 

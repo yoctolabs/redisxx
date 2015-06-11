@@ -269,7 +269,7 @@ class CommandList: private std::vector<Command> {
 					for (auto const & cmd: *this) {
 						num_bulks += cmd.num_bulks;
 					}
-					out += std::to_string(num_bulks);
+					out += std::to_string(num_bulks) + "\r\n";
 					break;
 				
 				case BatchType::Transaction:
