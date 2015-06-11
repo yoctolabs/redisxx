@@ -17,6 +17,7 @@
 #include <set>
 
 namespace redis {
+namespace priv {
 
 // assume T not to be a set
 template <typename T>
@@ -67,4 +68,6 @@ template <typename T, typename Allocator>
 struct is_sequence<std::list<T, Allocator>>: std::true_type {
 };
 
-}
+} // ::priv
+} // ::redis
+

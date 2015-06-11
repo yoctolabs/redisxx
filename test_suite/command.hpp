@@ -7,8 +7,8 @@
 #include <redisxx/command.hpp>
 
 BOOST_AUTO_TEST_CASE(command_string_api) {
-	redis::Command cmd("set", "foo", "bar");
-	BOOST_CHECK(*cmd == "set foo bar");
+	redis::Command cmd("set", "foulish", "barrr");
+	BOOST_CHECK(*cmd == "*3\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n");
 }
 
 BOOST_AUTO_TEST_CASE(command_map_api) {
@@ -16,27 +16,27 @@ BOOST_AUTO_TEST_CASE(command_map_api) {
 	data["asdf"] = 12;
 	data["qwertz"] = -23;
 	redis::Command cmd("hmset", "test", data);
-	BOOST_REQUIRE(*cmd == "hmset test asdf 12 qwertz -23");
+	BOOST_REQUIRE(*cmd == "*6\r\n$5\r\nhmset\r\n$4\r\ntest\r\n$4\r\nasdf\r\n$2\r\n12\r\n$6\r\nqwertz\r\n$3\r\n-23\r\n");
 	
 	cmd << "another" << "pair";
-	BOOST_CHECK(*cmd == "hmset test asdf 12 qwertz -23 another pair");
+	BOOST_CHECK(*cmd == "*8\r\n$5\r\nhmset\r\n$4\r\ntest\r\n$4\r\nasdf\r\n$2\r\n12\r\n$6\r\nqwertz\r\n$3\r\n-23\r\n$7\r\nanother\r\n$4\r\npair\r\n");
 }
 
 BOOST_AUTO_TEST_CASE(command_sequence_api) {
 	std::vector<float> data{3.14f, 1.414f, -0.234f};
 	redis::Command cmd("sadd", "new", data);
-	BOOST_REQUIRE(*cmd == "sadd new 3.140000 1.414000 -0.234000");
+	BOOST_REQUIRE(*cmd == "*5\r\n$4\r\nsadd\r\n$3\r\nnew\r\n$8\r\n3.140000\r\n$8\r\n1.414000\r\n$9\r\n-0.234000\r\n");
 
 	cmd << 12l << "helloWorld" << 0;
-	BOOST_CHECK(*cmd == "sadd new 3.140000 1.414000 -0.234000 12 helloWorld 0");
+	BOOST_CHECK(*cmd == "*8\r\n$4\r\nsadd\r\n$3\r\nnew\r\n$8\r\n3.140000\r\n$8\r\n1.414000\r\n$9\r\n-0.234000\r\n$2\r\n12\r\n$10\r\nhelloWorld\r\n$1\r\n0\r\n");
 }
 
 BOOST_AUTO_TEST_CASE(command_set_api) {
 	std::set<std::string> data{"bob", "max", "susi"};
 	redis::Command cmd("sadd", "users", data);
-	BOOST_REQUIRE(*cmd == "sadd users bob max susi");
+	BOOST_REQUIRE(*cmd == "*5\r\n$4\r\nsadd\r\n$5\r\nusers\r\n$3\r\nbob\r\n$3\r\nmax\r\n$4\r\nsusi\r\n");
 
-	cmd << "carl" << "red" << "chris";
-	BOOST_CHECK(*cmd == "sadd users bob max susi carl red chris");
+	cmd << "carl";
+	BOOST_CHECK(*cmd == "*6\r\n$4\r\nsadd\r\n$5\r\nusers\r\n$3\r\nbob\r\n$3\r\nmax\r\n$4\r\nsusi\r\n$4\r\ncarl\r\n");
 }
 
