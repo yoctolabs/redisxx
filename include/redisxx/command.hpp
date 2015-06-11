@@ -141,8 +141,13 @@ struct Dump<> {
 
 // ----------------------------------------------------------------------------
 
+/// Public pipeline class
+class CommandList;
+
 /// Public command class
 class Command {
+	
+	friend class CommandList;
 	
 	template <typename T>
 	friend Command& operator<<(Command& cmd, T&& value);
@@ -182,7 +187,7 @@ class Command {
 		 *
 		 *	@return non-reference to the internal buffer.
 		 */
-		std::string operator*() const {
+		inline std::string operator*() const {
 			return "*" + std::to_string(num_bulks) + "\r\n" + buffer;
 		}
 };
@@ -207,6 +212,53 @@ template <typename T>
 Command& operator<<(Command& cmd, T&& value) {
 	priv::Dump<T>::process(cmd.buffer, cmd.num_bulks, std::forward<T>(value));
 	return cmd;
+}
+
+// ----------------------------------------------------------------------------
+
+class CommandList {
+
+	friend CommandList& operator<<(CommandList& list, Command const & cmd);
+
+	private:
+		bool transaction;				// if true MULTI-EXEC, else pipeline
+		std::vector<Command> buffer;	// buffer of commands
+		
+	public:
+		CommandList(bool transaction=false)
+			: transaction{transaction}
+			, buffer{} {
+		}
+		
+		inline std::string operator*() const {
+			std::string out;
+			if (transaction) {
+				// start transaction
+				out = "$5\r\nMULTI\r\n";
+			} else {
+				// start pipeline
+				out = '*';
+				std::size_t num_bulks = 0u;
+				for (auto const & cmd: buffer) {
+					num_bulks += cmd.num_bulks;
+				}
+				out += std::to_string(num_bulks);
+			}
+			// concatenate commands
+			for (auto const & cmd: buffer) {
+				out += cmd.buffer;
+			}
+			if (transaction) {
+				out += "$4\r\nEXEC\r\n";
+			}
+			return out;
+		}
+
+};
+
+CommandList& operator<<(CommandList& list, Command const & cmd) {
+	list.buffer.push_back(cmd);
+	return list;
 }
 
 } // ::redis
