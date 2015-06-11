@@ -152,8 +152,11 @@ class Command {
 	template <typename T>
 	friend Command& operator<<(Command& cmd, T&& value);
 	
+	friend bool operator==(Command const & lhs, Command const & rhs);
+	friend bool operator!=(Command const & lhs, Command const & rhs);
+	
 	private:
-		std::string buffer;		// holds preformatted bulk strings
+		std::string buffer;		// preformatted bulk strings
 		std::size_t num_bulks;	// number of bulk strings
 		
 	public:
@@ -190,6 +193,11 @@ class Command {
 		inline std::string operator*() const {
 			return "*" + std::to_string(num_bulks) + "\r\n" + buffer;
 		}
+		
+		inline void clear() {
+			buffer.clear();
+			num_bulks = 0u;
+		}
 };
 
 /// Append another value to the command
@@ -214,24 +222,33 @@ Command& operator<<(Command& cmd, T&& value) {
 	return cmd;
 }
 
+bool operator==(Command const & lhs, Command const & rhs) {
+	return (lhs.buffer == rhs.buffer && lhs.num_bulks == rhs.num_bulks);
+}
+
+bool operator!=(Command const & lhs, Command const & rhs) {
+	return (lhs.buffer == rhs.buffer || lhs.num_bulks == rhs.num_bulks);
+}
+
 // ----------------------------------------------------------------------------
 
 enum class BatchType {
 	Pipeline, Transaction
 };
 
-class CommandList {
+class CommandList: private std::vector<Command> {
 
 	friend CommandList& operator<<(CommandList& list, Command const & cmd);
 
+	using Parent = std::vector<Command>;
+
 	private:
 		BatchType type;
-		std::vector<Command> buffer;
 		
 	public:
 		CommandList(BatchType type=BatchType::Transaction)
-			: type{type}
-			, buffer{} {
+			: Parent{}
+			, type{type} {
 		}
 		
 		inline BatchType getBatchType() const {
@@ -249,7 +266,7 @@ class CommandList {
 			switch (type) {
 				case BatchType::Pipeline:
 					out = '*';
-					for (auto const & cmd: buffer) {
+					for (auto const & cmd: *this) {
 						num_bulks += cmd.num_bulks;
 					}
 					out += std::to_string(num_bulks);
@@ -260,7 +277,7 @@ class CommandList {
 					break;
 			}
 			// concatenate commands
-			for (auto const & cmd: buffer) {
+			for (auto const & cmd: *this) {
 				out += cmd.buffer;
 			}
 			// finish command batch
@@ -275,11 +292,19 @@ class CommandList {
 			}
 			return out;
 		}
+		
+		// add some methods of std::vector to the public interface
+		using Parent::reserve;
+		using Parent::size;
+		using Parent::capacity;
+		using Parent::clear;
+		using Parent::empty;
+		using Parent::at;
 
 };
 
 CommandList& operator<<(CommandList& list, Command const & cmd) {
-	list.buffer.push_back(cmd);
+	list.push_back(cmd);
 	return list;
 }
 

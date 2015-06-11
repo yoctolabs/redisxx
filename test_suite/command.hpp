@@ -9,6 +9,9 @@
 BOOST_AUTO_TEST_CASE(command_string_api) {
 	redis::Command cmd{"set", "foulish", "barrr"};
 	BOOST_CHECK(*cmd == "*3\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n");
+	
+	cmd.clear();
+	BOOST_CHECK(*cmd == "*0\r\n");
 }
 
 BOOST_AUTO_TEST_CASE(command_map_api) {
@@ -38,6 +41,28 @@ BOOST_AUTO_TEST_CASE(command_set_api) {
 
 	cmd << "carl";
 	BOOST_CHECK(*cmd == "*6\r\n$4\r\nsadd\r\n$5\r\nusers\r\n$3\r\nbob\r\n$3\r\nmax\r\n$4\r\nsusi\r\n$4\r\ncarl\r\n");
+}
+
+BOOST_AUTO_TEST_CASE(commandlist_vector_api) {
+	redis::CommandList list;
+	redis::Command cmd1{"ping"};
+	redis::Command cmd2{"info"};
+	BOOST_CHECK(list.empty());
+	
+	list << cmd1;
+	BOOST_CHECK(list.size() == 1u);
+	BOOST_CHECK(list.capacity() >= 1u);
+	BOOST_CHECK(!list.empty());
+	
+	BOOST_CHECK(list.at(0) == cmd1);
+	list.at(0) = cmd2;
+	BOOST_CHECK(list.at(0) == cmd2);
+	
+	list.clear();
+	BOOST_CHECK(list.empty());
+	list.reserve(10u);
+	BOOST_CHECK(list.size() == 0u);
+	BOOST_CHECK(list.capacity() >= 10u);
 }
 
 BOOST_AUTO_TEST_CASE(commandlist_type_api) {
