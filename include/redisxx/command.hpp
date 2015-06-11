@@ -141,10 +141,44 @@ struct Dump<> {
 
 // ----------------------------------------------------------------------------
 
-/// Public pipeline class
+/// CommandList
 class CommandList;
 
-/// Public command class
+/// Command
+/**
+ *	This class is used to create RESP-compliant request strings. Each command
+ *	instance can hold multiple arguments that belong to one redis command.
+ *	Note that each argument that is passed to the Command needs to be atomic.
+ *	So "GET foo" as single argument will NOT work to GET the key "foo". Instead
+ *	use two arguments "GET" and "foo.
+ *	Different argument types are supported: primitive types (such as int, float
+ *	and similar), std::string, std::vector<>, std::list<>, std::map<>,
+ *	std::unordered_map<>, std::set<>, std::unordered_set<>. Note that those
+ *	containers can only contain primitive types or string. Nested types (e.g.
+ *	a set of sequences) are NOT supported.
+ *
+ *	Example usage:
+ *	@code
+ *		// using primitive types / strings
+ *		redis::Command cmd{"SET"};
+ *		cmd << "my_key" << 5;
+ *		// means: "SET my_key 5"
+ *
+ *		// using a vector
+ *		redis::Command cmd2;
+ *		std::vector<int> numbers = {1, 3, 17, 12, 5};
+ *		cmd2 << "SADD" << "ids" << numbers;
+ *		// means: "SADD ids 1 3 17 12 5"
+ *
+ *		// using a map
+ *		redis::Command cmd3{"HMSET"};
+ *		std::map<std::string, std::string> data;
+ *		data["name"]	= "max"
+ *		data["passwd"]	= "secret"
+ *		cmd3 << "user:5" << data;
+ *		// means: "HMSET user:5 name max passwd secret"
+ *	@endcode
+ */
 class Command {
 	
 	friend class CommandList;
@@ -164,14 +198,7 @@ class Command {
 		/**
 		 *	The ctor can handle a variadic list of arguments and dumps them
 		 *	according to RESP. Passing arguments of multiple types is supported
-		 *	here. But keep in mind that each argument is handled as an atomic.
-		 *	So "GET foo" as one argument will not cause getting they key 'foo'.
-		 *	Instead pass two arguments "GET" and "foo".
-		 *	Supported types are: primitive types (int, float etc.), std::string,
-		 *	std::vector<>, std::list<>, std::(unordered_)map<> and
-		 *	std::(unordered_)set<> of those supported types.
-		 *	Remember that no nested types (such as a set of sequences) are
-		 *	allowed here.
+		 *	here.
 		 *
 		 *	@param ...args variadic list of arguments
 		 */
@@ -182,18 +209,21 @@ class Command {
 			priv::Dump<Args...>::process(buffer, num_bulks, std::forward<Args>(args)...);
 		}
 		
-		/// Return internal buffer
+		/// Return RESP-compliant request string
 		/**
-		 *	This method can be used to const-access the command buffer. The
-		 *	returned string already contains the leading '*' etc., so it is
-		 *	completly RESP-compliant, so it's ready to be sent.
+		 *	This method can be used to create a RESP-compliant request.
 		 *
-		 *	@return non-reference to the internal buffer.
+		 *	@return A ready-to-send request string
 		 */
 		inline std::string operator*() const {
 			return "*" + std::to_string(num_bulks) + "\r\n" + buffer;
 		}
 		
+		/// Clear internal buffer
+		/**
+		 *	This method can be used to clear the internal command buffer. Note
+		 *	that all added values will be lost.
+		 */
 		inline void clear() {
 			buffer.clear();
 			num_bulks = 0u;
@@ -203,14 +233,7 @@ class Command {
 /// Append another value to the command
 /**
  *	This method appends a value of a generic type to the given command. The
- *	given argument is dumped according to RESP. But keep in mind that each
- *	argument is handled as an atomic. So "GET foo" as one argument will not
- *	cause getting they key 'foo'. Instead call this method twice: first with
- *	"GET" and the second time with "foo".
- *	supported types are the same as used for the ctor of `Command`:
- *	primitive types (int, float etc.), std::string, std::vector<>, std::list<>,
- *	std::(unordered_)map<> and std::(unordered_)set<> of those supported types.
- *	Remember that no nested types (such as a set of sequences) are allowed here.
+ *	given argument is dumped according to RESP.
  *
  *	@param cmd Command to append the argument to
  *	@param value Value to append to the command
@@ -222,20 +245,65 @@ Command& operator<<(Command& cmd, T&& value) {
 	return cmd;
 }
 
+/// Check whether to commands equal
+/**
+ *	Two commands equal if their buffers (and the number of bulk strings inside
+ *	the buffers) equal.
+ *
+ *	@param lhs Left-hand-side command object
+ *	@param rhs Right-hand-side command object
+ *	@return True if both objects equal
+ */
 bool operator==(Command const & lhs, Command const & rhs) {
 	return (lhs.buffer == rhs.buffer && lhs.num_bulks == rhs.num_bulks);
 }
 
+/// Check whether to commands do not equal
+/**
+ *	Two commands do not equal if their buffers (or the number of bulk strings
+ *	inside the buffers) do not equal.
+ *
+ *	@param lhs Left-hand-side command object
+ *	@param rhs Right-hand-side command object
+ *	@return True if both objects do not equal
+ */
 bool operator!=(Command const & lhs, Command const & rhs) {
-	return (lhs.buffer == rhs.buffer || lhs.num_bulks == rhs.num_bulks);
+	return (lhs.num_bulks == rhs.num_bulks || lhs.buffer == rhs.buffer);
 }
 
 // ----------------------------------------------------------------------------
 
+/// Type of batch request used for a CommandList
 enum class BatchType {
 	Pipeline, Transaction
 };
 
+/// CommandList
+/**
+ *	A command list can be used to process multiple commands at once using
+ *	pipelining or a transaction. This "batch type" can be modified during
+ *	runtime.
+ *	Only command objects can be appended to a command list. So the list can be
+ *	used to produce a larger RESP-compliant request (either pipelined or using
+ *	a transaction).
+ *	A limited set of functionality is inherited from std::vector to allow more
+ *	detailed access to the underlying container.
+ *
+ *	Example usage:
+ *	@code
+ *		redis::CommandList list;
+ *		list.reserve(5);
+ *		for (int i = 0; i < 5; ++i) {
+ *			list << redis::Command{"HGETALL", "user:" + std::to_string(i)};
+ *		}
+ *
+ *		redis::CommandList list2;
+ *		list2.setBatchType(redis::BatchType::Transaction);
+ *		redis::Command cmd{"PING"};
+ *		list2 << cmd << cmd << cmd;
+ *		list2.at(1) = redis::Command{"INFO"};
+ *	@endcode
+ */
 class CommandList: private std::vector<Command> {
 
 	friend CommandList& operator<<(CommandList& list, Command const & cmd);
@@ -243,22 +311,49 @@ class CommandList: private std::vector<Command> {
 	using Parent = std::vector<Command>;
 
 	private:
-		BatchType type;
+		BatchType type;		// determines type of request batch
 		
 	public:
+		/// Construct a new command list
+		/**
+		 *	This will construct a new command list. Specifying the batch type
+		 *	is optional. The default batch type is a transaction.
+		 *
+		 *	@param type BatchType to use for creating a request string
+		 */
 		CommandList(BatchType type=BatchType::Transaction)
 			: Parent{}
 			, type{type} {
 		}
 		
+		/// Returns current batch type
+		/**
+		 *	Returns whether the current batch type is pipelining or transaction.
+		 *
+		 *	@return Current BatchType
+		 */
 		inline BatchType getBatchType() const {
 			return type;
 		}
 		
+		/// Set batch type to the given value
+		/**
+		 *	Sets the batch type to the pipelining or transaction.
+		 *
+		 *	@param type BatchType to use from now on
+		 */
 		inline void setBatchType(BatchType type) {
 			this->type = type;
 		}
 		
+		/// Return RESP-compliant request string
+		/**
+		 *	This method can be used to create a RESP-compliant request.
+		 *	Depending on the currently set batch type, this string will be a
+		 *	pipeline- or transaction-based request.
+		 *
+		 *	@return A ready-to-send request string
+		 */
 		inline std::string operator*() const {
 			std::string out;
 			std::size_t num_bulks = 0u;
@@ -303,6 +398,15 @@ class CommandList: private std::vector<Command> {
 
 };
 
+/// Append another command to the list
+/**
+ *	This method appends a command to the given command list without invalidating
+ *	the RESP-compliance of the command list.
+ *
+ *	@param list CommandList to append the command to
+ *	@param cmd Command to append to the list
+ *	@param return The given command list.
+ */
 CommandList& operator<<(CommandList& list, Command const & cmd) {
 	list.push_back(cmd);
 	return list;
