@@ -268,7 +268,7 @@ bool operator==(Command const & lhs, Command const & rhs) {
  *	@return True if both objects do not equal
  */
 bool operator!=(Command const & lhs, Command const & rhs) {
-	return (lhs.num_bulks == rhs.num_bulks || lhs.buffer == rhs.buffer);
+	return (lhs.num_bulks != rhs.num_bulks || lhs.buffer != rhs.buffer);
 }
 
 // ----------------------------------------------------------------------------
