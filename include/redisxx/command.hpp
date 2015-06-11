@@ -216,40 +216,62 @@ Command& operator<<(Command& cmd, T&& value) {
 
 // ----------------------------------------------------------------------------
 
+enum class BatchType {
+	Pipeline, Transaction
+};
+
 class CommandList {
 
 	friend CommandList& operator<<(CommandList& list, Command const & cmd);
 
 	private:
-		bool transaction;				// if true MULTI-EXEC, else pipeline
-		std::vector<Command> buffer;	// buffer of commands
+		BatchType type;
+		std::vector<Command> buffer;
 		
 	public:
-		CommandList(bool transaction=false)
-			: transaction{transaction}
+		CommandList(BatchType type=BatchType::Transaction)
+			: type{type}
 			, buffer{} {
+		}
+		
+		inline BatchType getBatchType() const {
+			return type;
+		}
+		
+		inline void setBatchType(BatchType type) {
+			this->type = type;
 		}
 		
 		inline std::string operator*() const {
 			std::string out;
-			if (transaction) {
-				// start transaction
-				out = "$5\r\nMULTI\r\n";
-			} else {
-				// start pipeline
-				out = '*';
-				std::size_t num_bulks = 0u;
-				for (auto const & cmd: buffer) {
-					num_bulks += cmd.num_bulks;
-				}
-				out += std::to_string(num_bulks);
+			std::size_t num_bulks = 0u;
+			// start command batch
+			switch (type) {
+				case BatchType::Pipeline:
+					out = '*';
+					for (auto const & cmd: buffer) {
+						num_bulks += cmd.num_bulks;
+					}
+					out += std::to_string(num_bulks);
+					break;
+				
+				case BatchType::Transaction:
+					out = "$5\r\nMULTI\r\n";
+					break;
 			}
 			// concatenate commands
 			for (auto const & cmd: buffer) {
 				out += cmd.buffer;
 			}
-			if (transaction) {
-				out += "$4\r\nEXEC\r\n";
+			// finish command batch
+			switch (type) {
+				case BatchType::Pipeline:
+					// nothing to do
+					break;
+				
+				case BatchType::Transaction:
+					out += "$4\r\nEXEC\r\n";
+					break;
 			}
 			return out;
 		}

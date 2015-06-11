@@ -40,9 +40,16 @@ BOOST_AUTO_TEST_CASE(command_set_api) {
 	BOOST_CHECK(*cmd == "*6\r\n$4\r\nsadd\r\n$5\r\nusers\r\n$3\r\nbob\r\n$3\r\nmax\r\n$4\r\nsusi\r\n$4\r\ncarl\r\n");
 }
 
+BOOST_AUTO_TEST_CASE(commandlist_type_api) {
+	redis::CommandList list;
+	BOOST_CHECK(list.getBatchType() == redis::BatchType::Transaction);
+	list.setBatchType(redis::BatchType::Pipeline);
+	BOOST_CHECK(list.getBatchType() == redis::BatchType::Pipeline);
+}
+
 BOOST_AUTO_TEST_CASE(commandlist_pipeline_api) {
 	redis::Command cmd1{"set", "foulish", "barrr"}, cmd2{"set", "lolish", "roflish"};
-	redis::CommandList list;
+	redis::CommandList list{redis::BatchType::Pipeline};
 	list << cmd1;
 	BOOST_CHECK(*list == *cmd1);
 	
@@ -52,7 +59,7 @@ BOOST_AUTO_TEST_CASE(commandlist_pipeline_api) {
 
 BOOST_AUTO_TEST_CASE(commandlist_transaction_api) {
 	redis::Command cmd1{"set", "foulish", "barrr"}, cmd2{"set", "lolish", "roflish"};
-	redis::CommandList list{true};
+	redis::CommandList list{redis::BatchType::Transaction};
 	list << cmd1;
 	BOOST_CHECK(*list == "$5MULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$4EXEC\r\n");
 	
