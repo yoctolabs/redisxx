@@ -6,6 +6,8 @@
 
 #include <redisxx/command.hpp>
 
+BOOST_AUTO_TEST_SUITE(redisxx_test_command)
+
 BOOST_AUTO_TEST_CASE(command_string_api) {
 	redis::Command cmd{"set", "foulish", "barrr"};
 	BOOST_CHECK_EQUAL(*cmd, "*3\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n");
@@ -95,4 +97,7 @@ BOOST_AUTO_TEST_CASE(commandlist_transaction_api) {
 	list << cmd2;
 	BOOST_CHECK_EQUAL(*list, "$5\r\nMULTI\r\n$3\r\nset\r\n$7\r\nfoulish\r\n$5\r\nbarrr\r\n$3\r\nset\r\n$6\r\nlolish\r\n$7\r\nroflish\r\n$4\r\nEXEC\r\n");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 
