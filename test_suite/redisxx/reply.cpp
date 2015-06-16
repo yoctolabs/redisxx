@@ -1,9 +1,14 @@
+/** @file test_suite/redisxx/reply.cpp
+ *
+ */
 #include <vector>
 #include <string>
 #include <boost/test/included/unit_test.hpp>
 
 #include <redisxx/reply.hpp>
 #include <redisxx/error.hpp>
+
+BOOST_AUTO_TEST_SUITE(redisxx_test_reply)
 
 BOOST_AUTO_TEST_CASE(reply_null) {
 	auto reply = redis::Reply::createNull();
@@ -86,3 +91,4 @@ BOOST_AUTO_TEST_CASE(reply_integer) {
 	BOOST_CHECK_THROW(reply[0], redis::ReplyError);
 }
 
+BOOST_AUTO_TEST_SUITE_END()

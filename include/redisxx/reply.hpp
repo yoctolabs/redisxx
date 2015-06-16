@@ -11,23 +11,70 @@
 #include <vector>
 #include <cstdint>
 #include <type_traits>
+#include <boost/any.hpp>
 
 #include <redisxx/error.hpp>
 
-namespace redis {
+namespace redisxx {
+
+template <typename T, ReplyType RT = ReplyType::Null>
+struct ReplyElement {
+
+	/** Type of reply 
+	 *
+	 * Useful to know how to deal with that element
+	 * @see ReplyType
+	 */
+	ReplyType m_type;
+
+	/** Main container of this reply content
+	 *
+	 * array ---> T = boost::any
+	 */
+	T m_content;
+
+	/** Empty reply for constant reference in operators */
+	ReplyElement<T, ReplyType::Null> m_empty_element;
+
+};
+
+typedef struct ReplyElement<std::string, ReplyType::Null>               ReplyElementNull;
+typedef struct ReplyElement<std::string, ReplyType::Error>              ReplyElementError;
+typedef struct ReplyElement<std::string, ReplyType::String>             ReplyElementString;
+typedef struct ReplyElement<std::int64_t, ReplyType::Integer>           ReplyElementInteger;
+typedef struct ReplyElement< std::vector<boost::any>, ReplyType::Array> ReplyElementArray;
+
+class Reply: std::vector<boost::any>
+{
+	private:
+	public:
+};
+
 
 class Reply {
 
-	friend bool operator==(Reply const & lhs, Reply const & rhs);
+friend bool operator==(Reply const & lhs, Reply const & rhs);
 
 	private:
-		ReplyType type;
+        /** Type of reply 
+         *
+         * @see ReplyType
+         *
+         */
+		ReplyType m_type;
 		
-		bool status;
-		std::string string; // for error and string reply
-		std::vector<Reply> array; // for array reply
-		std::int64_t integer; // for integer reply
+        /** List of replies for status and error replies */
+		std::string m_string;
+
+        /** Integer value for integer replies */
+		std::int64_t m_integer;
 		
+        /** List of replies for array replies */
+		std::vector<Reply> m_array;
+
+        /** Empty reply for constant reference in operators */
+        Reply m_empty_reply;
+
 		Reply(ReplyType type, bool status, std::string const & string, std::vector<Reply> const & array, std::int64_t integer)
 			: type{type}
 			, status{status}
@@ -37,14 +84,29 @@ class Reply {
 		}
 		
 		Reply(ReplyType type, bool status, std::string const & string, std::vector<Reply>&& array, std::int64_t integer)
-			: type{type}
-			, status{status}
-			, string{string}
-			, array{std::move(array)}
-			, integer{integer} {
 		}
 	
 	public:
+
+        Reply()
+        : m_type{type}
+        , m_string("")
+        , m_integer(0)
+        , m_hash()
+        {
+        }
+
+        /** Constructor from a string from the server 
+         *
+         * @param server_string text reply from the server
+         *
+         */
+        Reply(const std::string& server_string)
+        : m_empty_reply()
+        , 
+        {
+        }
+
 		/// Factory method for null-reply
 		/**
 		 *	This calls the private constructor.
@@ -234,5 +296,5 @@ bool operator==(Reply const & lhs, Reply const & rhs) {
 		&& lhs.array == rhs.array);
 }
 
-} // ::redis
+} // ::redisxx
 

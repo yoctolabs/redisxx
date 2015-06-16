@@ -10,35 +10,37 @@
 #include <string>
 #include <vector>
 
-namespace redis {
+namespace redisxx {
 
 enum class ReplyType {
-	Null, Status, Error, String, Array, Integer
+	Null = 0, Error, Status, String, Integer, Array 
 };
 
 // ----------------------------------------------------------------------------
-// API to debug-dump reply-type(s)
+namespace reply_utils {
 
-namespace priv {
-
-std::string to_string(ReplyType type) {
+static std::string to_string(const ReplyType& type) const
+{
 	switch (type) {
+		case ReplyType::Null:
+			return "null";
 		case ReplyType::Status:
 			return "status";
 		case ReplyType::Error:
 			return "error";
 		case ReplyType::String:
 			return "string";
-		case ReplyType::Array:
-			return "array";
-		case ReplyType::Null:
-			return "null";
 		case ReplyType::Integer:
 			return "integer";
+		case ReplyType::Array:
+			return "array";
+        default:
+            return "undefined";
 	}
 }
 
-std::string to_string(std::vector<ReplyType> const & expected) {
+std::string to_string(std::vector<ReplyType> const & expected)
+{
 	if (expected.size() == 1u) {
 		return to_string(expected[0]);
 	}
@@ -54,7 +56,6 @@ std::string to_string(std::vector<ReplyType> const & expected) {
 	return out;
 }
 
-} // ::priv
-
-} // ::redis
+} // ::reply_utils
+} // ::redisxx
 
