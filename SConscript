@@ -51,13 +51,13 @@ def getSuffixedFiles(dirpath, filesuffix):
 ### TEST target
 if ("test" in COMMAND_LINE_TARGETS) | ("coverage" in COMMAND_LINE_TARGETS):
 	testenv = env.Clone()
-	testenv.Append(CPPFLAGS = ["-DTEST"])
+	testenv.Append(CPPFLAGS = ["-DTEST", "-pthread"])
 
 	cxxfiles = getSuffixedFiles(conf_testdir, "*.cpp")
 	if (cxxfiles != []):
 		# For shared libraries
 		# test_libs = [package_name, "boost_unit_test_framework"]
-		test_libs = ["boost_unit_test_framework"];
+		test_libs = ["boost_unit_test_framework", "boost_system", "boost_thread"];
 		test_libs.append(deps_test);
 
 		# attach program to test target

@@ -20,7 +20,7 @@ namespace priv {
 // API to enable stringification of common non-nested types
 
 // replace bad characters
-std::string stringify(std::string value) {
+inline std::string stringify(std::string value) {
 	// tba: escape '\r' and '\n'
 	return value;
 }
@@ -37,13 +37,13 @@ stringify(T value) {
 // API to apply protocol specifications to various types
 
 // map string to bulk string
-std::string protocolify(std::size_t& num, std::string const & value) {
+inline std::string protocolify(std::size_t& num, std::string const & value) {
 	++num;
 	return '$' + std::to_string(value.size()) + "\r\n" + value + "\r\n";
 }
 
 // map nullptr_t to null
-std::string protocolify(std::size_t& num, std::nullptr_t ptr) {
+inline std::string protocolify(std::size_t& num, std::nullptr_t ptr) {
 	++num;
 	return "$-1\r\n";
 }
@@ -254,7 +254,7 @@ Command& operator<<(Command& cmd, T&& value) {
  *	@param rhs Right-hand-side command object
  *	@return True if both objects equal
  */
-bool operator==(Command const & lhs, Command const & rhs) {
+inline bool operator==(Command const & lhs, Command const & rhs) {
 	return (lhs.buffer == rhs.buffer && lhs.num_bulks == rhs.num_bulks);
 }
 
@@ -267,7 +267,7 @@ bool operator==(Command const & lhs, Command const & rhs) {
  *	@param rhs Right-hand-side command object
  *	@return True if both objects do not equal
  */
-bool operator!=(Command const & lhs, Command const & rhs) {
+inline bool operator!=(Command const & lhs, Command const & rhs) {
 	return (lhs.num_bulks != rhs.num_bulks || lhs.buffer != rhs.buffer);
 }
 
@@ -407,7 +407,7 @@ class CommandList: private std::vector<Command> {
  *	@param cmd Command to append to the list
  *	@param return The given command list.
  */
-CommandList& operator<<(CommandList& list, Command const & cmd) {
+inline CommandList& operator<<(CommandList& list, Command const & cmd) {
 	list.push_back(cmd);
 	return list;
 }

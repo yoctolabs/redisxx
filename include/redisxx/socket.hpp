@@ -10,7 +10,8 @@
 
 #if defined(REDISXX_SFML_SOCKET)
 	#include <redisxx/socket/sfml_tcp.hpp>
-#elif defined(REDISXX_BOOST_SOCKET)
+#else
+	// defined(REDISXX_BOOST_SOCKET)
 	#include <redisxx/socket/boost_tcp.hpp>
 #endif
 
@@ -18,7 +19,8 @@ namespace redisxx {
 
 #if defined(REDISXX_SFML_SOCKET)
 using DefaultSocket = SfmlTcpSocket;
-#elif defined(REDISXX_BOOST_SOCKET)
+#else
+// defined(REDISXX_BOOST_SOCKET)
 using DefaultSocket = BoostTcpSocket;
 #endif
 
