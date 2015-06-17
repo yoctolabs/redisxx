@@ -35,7 +35,7 @@ class BoostTcpSocket {
 
 		void write(char const * data, std::size_t num_bytes) {
 			try {
-				boost::asio::write(socket, boost::asio::buffer(data, num_bytes));
+				socket.send(boost::asio::buffer(data, num_bytes));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
 				throw std::runtime_error{e.what()};
@@ -44,8 +44,7 @@ class BoostTcpSocket {
 
 		std::size_t read(char* data, std::size_t num_bytes) {
 			try {
-				// tba: avoid blocking if less bytes can be read than expected 
-				return boost::asio::read(socket, boost::asio::buffer(data, num_bytes));
+				return socket.read_some(boost::asio::buffer(data, num_bytes));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
 				throw std::runtime_error{e.what()};
