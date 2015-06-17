@@ -7,34 +7,25 @@
  *
  */
 #pragma once
+#include <string>
 #include <future>
 
 #include <redisxx/socket.hpp>
 //#include <redisxx/reply.hpp>
 
 namespace redisxx {
-namespace priv {
-
-template <typename SocketImpl>
-std::string fetch_string(SocketImpl& socket, std::string const & string) {
-	// write request
-	socket.write(string.c_str(), string.size());
-	// read reply
-	// tba: read entire string and use it to construct reply
-	return "";
-}
-
-} // ::priv
-
-
-// ----------------------------------------------------------------------------
 
 // dummy
 using Reply = std::string;
 
 
-
-template <typename SocketImpl = DefaultSocket>
+#if defined(REDISXX_SFML_SOCKET)
+template <typename SocketImpl = SfmlTcpSocket>
+#elif defined(REDISXX_BOOST_SOCKET)
+template <typename SocketImpl = BoostTcpSocket>
+#else
+template <typename SocketImpl>
+#endif
 class Connection {
 	private:
 		SocketImpl socket;
@@ -50,7 +41,7 @@ class Connection {
 			auto string = *request;
 			// note: catch string by value because it's local!
 			return std::async(std::launch::async, [&, string]() {
-				return Reply{priv::fetch_string(socket, string)};
+				return Reply{priv::process(socket, string)};
 			});
 		}
 };
