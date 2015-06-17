@@ -13,7 +13,7 @@
 
 #include <redisxx/type_traits.hpp>
 
-namespace redis {
+namespace redisxx {
 namespace priv {
 
 // ----------------------------------------------------------------------------
@@ -412,5 +412,5 @@ CommandList& operator<<(CommandList& list, Command const & cmd) {
 	return list;
 }
 
-} // ::redis
+} // ::redisxx
 

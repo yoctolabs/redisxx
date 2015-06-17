@@ -16,7 +16,7 @@
 #include <map>
 #include <set>
 
-namespace redis {
+namespace redisxx {
 namespace priv {
 
 // assume T not to be a set
@@ -69,5 +69,5 @@ struct is_sequence<std::list<T, Allocator>>: std::true_type {
 };
 
 } // ::priv
-} // ::redis
+} // ::redisxx
 
