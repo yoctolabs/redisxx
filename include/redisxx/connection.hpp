@@ -16,7 +16,20 @@
 namespace redisxx {
 
 // dummy
-using Reply = std::string;
+class Reply {
+	private:
+		std::string s;
+
+	public:
+		Reply(std::string const & raw)
+			: s{raw.substr(1u, raw.size() - 3u)} {
+		}
+		
+		inline std::string const & getString() const {
+			return s;
+		}
+};
+// end dummy
 
 
 #if defined(REDISXX_SFML_SOCKET)
