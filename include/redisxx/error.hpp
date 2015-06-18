@@ -15,18 +15,30 @@ namespace redisxx {
 
 class ConnectionError: public std::runtime_error {
 	private:
-		std::string const host;
+		std::string const host, filename;
 		unsigned int const port;
 		
 	public:
 		ConnectionError(std::string const & msg, std::string const & host, unsigned int port)
 			: std::runtime_error{msg}
 			, host{host}
+			, filename{""}
 			, port{port} {
+		}
+		
+		ConnectionError(std::string const & msg, std::string const & filename)
+			: std::runtime_error{msg}
+			, host{}
+			, filename{filename}
+			, port{0u} {
 		}
 
 		inline std::string const & getHost() const {
 			return host;
+		}
+		
+		inline std::string const & getFilename() const {
+			return filename;
 		}
 
 		inline unsigned int getPort() const {

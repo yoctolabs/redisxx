@@ -1,11 +1,11 @@
 // needs to be linke against boost_system, boost_thread and with -pthread
-#define REDISXX_BOOST_SOCKET 1
+#define REDISXX_UNIX_SOCKET 1
 #include <iostream>
 #include <redisxx/connection.hpp>
 #include <redisxx/command.hpp>
 
 int main() {
-	redisxx::Connection<redisxx::BoostTcpSocket> conn{"127.0.0.1", 6379u};
+	redisxx::Connection<redisxx::BoostUnixSocket> conn{"/tmp/redis.sock"};
 
 	auto reply1 = conn(redisxx::Command{"ping"});
 	auto reply2 = conn(redisxx::Command{"info"});

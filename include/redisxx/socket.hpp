@@ -13,6 +13,8 @@
 	#include <redisxx/socket/sfml_tcp.hpp>
 #elif defined(REDISXX_BOOST_SOCKET)
 	#include <redisxx/socket/boost_tcp.hpp>
+#elif defined(REDISXX_UNIX_SOCKET)
+	#include <redisxx/socket/boost_unix.hpp>
 #endif
 
 namespace redisxx {

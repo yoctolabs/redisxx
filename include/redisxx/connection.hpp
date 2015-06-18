@@ -32,13 +32,9 @@ class Reply {
 // end dummy
 
 
-#if defined(REDISXX_SFML_SOCKET)
-template <typename SocketImpl = SfmlTcpSocket>
-#elif defined(REDISXX_BOOST_SOCKET)
-template <typename SocketImpl = BoostTcpSocket>
-#else
+// note: default template parameter isn't working well with #ifdef AND template specialization .. I'm on it! ;)
+
 template <typename SocketImpl>
-#endif
 class Connection {
 	private:
 		std::string const host;
@@ -62,7 +58,32 @@ class Connection {
 		}
 };
 
-// tba: add template-specialization for using UnixDomainSocket with ctor(filename)
+
+#if defined(REDISXX_UNIX_SOCKET)
+// Specialization for UnixDomainSocket
+template <>
+class Connection<BoostUnixSocket> {
+	private:
+		std::string const filename;
+		
+	public:
+		Connection(std::string const & filename)
+			: filename{filename} {
+		}
+		
+		template <typename Request>
+		std::future<Reply> operator()(Request const & request) {
+			auto string = *request;
+			// note: catch string by value because it's local!
+			return std::async(std::launch::async, [&, string]() {
+				// create dedicated socket for this request
+				BoostUnixSocket socket{filename};
+				return Reply{priv::process(socket, string)};
+			});
+		}
+};
+#endif
+
 
 } // ::redisxx
 
