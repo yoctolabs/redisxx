@@ -18,11 +18,22 @@
 namespace redisxx {
 namespace priv {
 
+/// Process a request
+/**
+ *	This method processes the given request using the given socket. It reads
+ *	the entire reply string and returns it. If no reply is available yet, this
+ *	function will block until the reply is available.
+ *
+ *	@throw ConnectionError if an error occured
+ *	@param socket Reference to a socket wrapper
+ *	@param request RESP-compliant Request string
+ *	@return Entire reply string
+ */
 template <typename SocketImpl>
-std::string process(SocketImpl& socket, std::string const & string) {
+std::string process(SocketImpl& socket, std::string const & request) {
 	socket.open();
 	// write request
-	socket.write(string.c_str(), string.size());
+	socket.write(request.c_str(), request.size());
 	// read chunks of the reply
 	std::string buffer;
 	char byte;

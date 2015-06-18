@@ -9,8 +9,9 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <stdexcept>
 #include <SFML/Network.hpp>
+
+#include <redisxx/error.hpp>
 
 namespace redisxx {
 
@@ -38,9 +39,7 @@ class SfmlTcpSocket {
 		void open() {
 			auto status = socket.connect(host, port);
 			if (status != sf::Socket::Done) {
-				throw std::runtime_error{
-					"Cannot connect to " + host + ":" + std::to_string(port)
-				};
+				throw ConnectionError{"Cannot connect", host, port};
 			}
 		}
 		
@@ -51,7 +50,7 @@ class SfmlTcpSocket {
 		void write(char const * data, std::size_t num_bytes) {
 			auto status = socket.send(data, num_bytes);
 			if (status != sf::Socket::Done) {
-				throw std::runtime_error{"Cannot write bytes to socket"};
+				throw ConnectionError{"Cannot write", host, port};
 			}
 		}
 
@@ -59,7 +58,7 @@ class SfmlTcpSocket {
 			std::size_t unused;
 			auto status = socket.receive(data, num_bytes, unused);
 			if (status != sf::Socket::Done) {
-				throw std::runtime_error{"Cannot read bytes from socket"};
+				throw ConnectionError{"Cannot read", host, port};
 			}
 		}
 		
@@ -67,7 +66,7 @@ class SfmlTcpSocket {
 			std::size_t received;
 			auto status = socket.receive(data, num_bytes, received);
 			if (status != sf::Socket::Done) {
-				throw std::runtime_error{"Cannot read bytes from socket"};
+				throw ConnectionError{"Cannot read", host, port};
 			}
 			return received;
 		}

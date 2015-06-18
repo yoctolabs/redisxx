@@ -9,8 +9,9 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <stdexcept>
 #include <boost/asio.hpp>
+
+#include <redisxx/error.hpp>
 
 namespace redisxx {
 
@@ -41,9 +42,7 @@ class BoostTcpSocket {
 				boost::asio::connect(socket, resolver.resolve({host, std::to_string(port)}));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
-				throw std::runtime_error{
-					"Cannot connect to " + host + ":"+ std::to_string(port)
-				};
+				throw ConnectionError{e.what(), host, port};
 			}
 		}
 		
@@ -56,7 +55,7 @@ class BoostTcpSocket {
 				socket.send(boost::asio::buffer(data, num_bytes));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
-				throw std::runtime_error{e.what()};
+				throw ConnectionError{e.what(), host, port};
 			}
 		}
 
@@ -65,7 +64,7 @@ class BoostTcpSocket {
 				boost::asio::read(socket, (boost::asio::buffer(data, num_bytes)));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
-				throw std::runtime_error{e.what()};
+				throw ConnectionError{e.what(), host, port};
 			}
 		}
 
@@ -74,7 +73,7 @@ class BoostTcpSocket {
 				return socket.read_some(boost::asio::buffer(data, num_bytes));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
-				throw std::runtime_error{e.what()};
+				throw ConnectionError{e.what(), host, port};
 			}
 		}
 };
