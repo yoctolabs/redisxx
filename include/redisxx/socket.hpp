@@ -9,13 +9,7 @@
 #pragma once
 #include <string>
 
-#if defined(REDISXX_SFML_SOCKET)
-	#include <redisxx/socket/sfml_tcp.hpp>
-#elif defined(REDISXX_BOOST_SOCKET)
-	#include <redisxx/socket/boost_tcp.hpp>
-#elif defined(REDISXX_UNIX_SOCKET)
-	#include <redisxx/socket/boost_unix.hpp>
-#endif
+// note: user needs to explicitly include a socket wrapper to enable it
 
 namespace redisxx {
 namespace priv {

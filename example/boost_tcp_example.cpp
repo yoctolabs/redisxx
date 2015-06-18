@@ -1,8 +1,8 @@
 // needs to be linke against boost_system, boost_thread and with -pthread
-#define REDISXX_BOOST_SOCKET 1
 #include <iostream>
 #include <redisxx/connection.hpp>
 #include <redisxx/command.hpp>
+#include <redisxx/socket/boost_tcp.hpp> // enables Boost's TcpSocket
 
 int main() {
 	redisxx::Connection<redisxx::BoostTcpSocket> conn{"127.0.0.1", 6379u};

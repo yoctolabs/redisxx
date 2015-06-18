@@ -13,6 +13,8 @@
 
 #include <redisxx/error.hpp>
 
+#define REDISXX_BOOST_SOCKET 1
+
 namespace redisxx {
 
 /// Socket wrapper using Boost Asio's TCP socket

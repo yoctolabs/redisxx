@@ -13,6 +13,8 @@
 
 #include <redisxx/error.hpp>
 
+#define REDISXX_SFML_SOCKET 1
+
 namespace redisxx {
 
 /// Socket wrapper using SFML's TCP socket

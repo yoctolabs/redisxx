@@ -17,6 +17,8 @@
 #error UnixDomainSocket is not available through Boost.
 #endif
 
+#define REDISXX_UNIX_SOCKET 1
+
 namespace redisxx {
 
 /// Socket wrapper using Boost for Unix Domain Socket
