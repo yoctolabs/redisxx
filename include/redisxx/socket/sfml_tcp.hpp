@@ -18,17 +18,34 @@ namespace redisxx {
 class SfmlTcpSocket {
 	private:
 		sf::TcpSocket socket;
+		std::string const host;
+		unsigned int const port;
 	
 	public:
-		SfmlTcpSocket(std::string const & host, std::uint16_t port)
-			: socket{} {
+		SfmlTcpSocket(std::string const & host, unsigned int port)
+			: socket{}
+			, host{host}
+			, port{port} {
 			socket.setBlocking(true);
+		}
+		
+		SfmlTcpSocket(SfmlTcpSocket const & other)
+			: socket{}
+			, host{other.host}
+			, port{other.port} {
+		}
+		
+		void open() {
 			auto status = socket.connect(host, port);
 			if (status != sf::Socket::Done) {
 				throw std::runtime_error{
 					"Cannot connect to " + host + ":" + std::to_string(port)
 				};
 			}
+		}
+		
+		void close() {
+			socket.disconnect();
 		}
 
 		void write(char const * data, std::size_t num_bytes) {
@@ -38,7 +55,15 @@ class SfmlTcpSocket {
 			}
 		}
 
-		std::size_t read(char* data, std::size_t num_bytes) {
+		void read_block(char* data, std::size_t num_bytes) {
+			std::size_t unused;
+			auto status = socket.receive(data, num_bytes, unused);
+			if (status != sf::Socket::Done) {
+				throw std::runtime_error{"Cannot read bytes from socket"};
+			}
+		}
+		
+		std::size_t read_some(char* data, std::size_t num_bytes) {
 			std::size_t received;
 			auto status = socket.receive(data, num_bytes, received);
 			if (status != sf::Socket::Done) {

@@ -9,9 +9,15 @@ struct MockSocket {
 	std::string buffer;
 	std::size_t pos;
 	
-	MockSocket()
-		: buffer{}
-		, pos{0} {
+	MockSocket() {
+	}
+
+	void open() {
+		buffer.clear();
+		pos = 0u;
+	}
+	
+	void close() {
 	}
 
 	void write(char const * data, std::size_t num_bytes) {
@@ -26,7 +32,15 @@ struct MockSocket {
 		}
 	}
 
-	std::size_t read(char* data, std::size_t num_bytes) {
+	void read_block(char* data, std::size_t num_bytes) {
+		if (pos + num_bytes >= buffer.size()) {
+			throw "This should not happen with the mock!";
+		}
+		std::strncpy(data, buffer.data() + pos, num_bytes);
+		pos += num_bytes;
+	}
+
+	std::size_t read_some(char* data, std::size_t num_bytes) {
 		// determine number of received bytes
 		std::size_t received = num_bytes;
 		if (pos + num_bytes >= buffer.size()) {
@@ -46,7 +60,7 @@ BOOST_AUTO_TEST_SUITE(redisxx_test_connection)
 BOOST_AUTO_TEST_CASE(connection_socket_ping) {
 	redisxx::Connection<MockSocket> conn; // no host/port required here
 	auto reply = conn(redisxx::Command("PING")).get();
-	BOOST_CHECK_EQUAL(reply.getString(), "PONG");
+	BOOST_CHECK_EQUAL(reply.getRaw(), "+PONG\r\n");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

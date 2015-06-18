@@ -8,9 +8,15 @@ struct MockSocket {
 	std::string buffer;
 	std::size_t pos;
 	
-	MockSocket()
-		: buffer{}
-		, pos{0} {
+	MockSocket() {
+	}
+
+	void open() {
+		buffer.clear();
+		pos = 0u;
+	}
+	
+	void close() {
 	}
 
 	void write(char const * data, std::size_t num_bytes) {
@@ -41,7 +47,15 @@ struct MockSocket {
 		}
 	}
 
-	std::size_t read(char* data, std::size_t num_bytes) {
+	void read_block(char* data, std::size_t num_bytes) {
+		if (pos + num_bytes >= buffer.size()) {
+			throw "This should not happen with the mock!";
+		}
+		std::strncpy(data, buffer.data() + pos, num_bytes);
+		pos += num_bytes;
+	}
+
+	std::size_t read_some(char* data, std::size_t num_bytes) {
 		// determine number of received bytes
 		std::size_t received = num_bytes;
 		if (pos + num_bytes >= buffer.size()) {

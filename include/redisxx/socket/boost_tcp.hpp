@@ -17,20 +17,38 @@ namespace redisxx {
 /// Socket wrapper using Boost Asio's TCP socket
 class BoostTcpSocket {
 	private:
-		boost::asio::io_service service;
+		static boost::asio::io_service service;
 		boost::asio::ip::tcp::socket socket;
+		std::string const host;
+		unsigned int port;
 	
 	public:
-		BoostTcpSocket(std::string const & host, std::uint16_t port)
-			: service{}
-			, socket{service} {
+		BoostTcpSocket(std::string const & host, unsigned int port)
+			: socket{BoostTcpSocket::service}
+			, host{host}
+			, port{port} {
+		}
+		
+		BoostTcpSocket(BoostTcpSocket const & other)
+			: socket{BoostTcpSocket::service}
+			, host{other.host}
+			, port{other.port} {
+		}
+		
+		void open() {
 			try {
 				boost::asio::ip::tcp::resolver resolver{service};
 				boost::asio::connect(socket, resolver.resolve({host, std::to_string(port)}));
 			} catch (boost::system::system_error const & e) {
 				// wrap to general exception
-				throw std::runtime_error{e.what()};
+				throw std::runtime_error{
+					"Cannot connect to " + host + ":"+ std::to_string(port)
+				};
 			}
+		}
+		
+		void close() {
+			// tba
 		}
 
 		void write(char const * data, std::size_t num_bytes) {
@@ -42,7 +60,16 @@ class BoostTcpSocket {
 			}
 		}
 
-		std::size_t read(char* data, std::size_t num_bytes) {
+		void read_block(char* data, std::size_t num_bytes) {
+			try {
+				boost::asio::read(socket, (boost::asio::buffer(data, num_bytes)));
+			} catch (boost::system::system_error const & e) {
+				// wrap to general exception
+				throw std::runtime_error{e.what()};
+			}
+		}
+
+		std::size_t read_some(char* data, std::size_t num_bytes) {
 			try {
 				return socket.read_some(boost::asio::buffer(data, num_bytes));
 			} catch (boost::system::system_error const & e) {
@@ -51,6 +78,9 @@ class BoostTcpSocket {
 			}
 		}
 };
+
+// let's have one io_service for all of our socket
+boost::asio::io_service BoostTcpSocket::service;
 
 } // ::redisxx
 

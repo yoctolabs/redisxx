@@ -18,15 +18,15 @@ namespace redisxx {
 // dummy
 class Reply {
 	private:
-		std::string s;
+		std::string raw;
 
 	public:
 		Reply(std::string const & raw)
-			: s{raw.substr(1u, raw.size() - 3u)} {
+			: raw{raw} {
 		}
 		
-		inline std::string const & getString() const {
-			return s;
+		inline std::string const & getRaw() const {
+			return raw;
 		}
 };
 // end dummy
@@ -54,7 +54,8 @@ class Connection {
 			auto string = *request;
 			// note: catch string by value because it's local!
 			return std::async(std::launch::async, [&, string]() {
-				return Reply{priv::process(socket, string)};
+				SocketImpl tmp{socket};
+				return Reply{priv::process(tmp, string)};
 			});
 		}
 };

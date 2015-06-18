@@ -20,17 +20,21 @@ namespace priv {
 
 template <typename SocketImpl>
 std::string process(SocketImpl& socket, std::string const & string) {
+	socket.open();
 	// write request
 	socket.write(string.c_str(), string.size());
 	// read chunks of the reply
 	std::string buffer;
+	char byte;
+	socket.read_block(&byte, 1u);
+	buffer += byte;
 	std::size_t chunk_size = 256u;
-	std::size_t pos = 0u;
+	std::size_t pos = 1u;
 	while (true) {
 		// resize buffer
 		buffer.resize(buffer.size() + chunk_size);
 		// read chunk
-		auto received = socket.read(&buffer[pos], chunk_size);
+		auto received = socket.read_some(&buffer[pos], chunk_size);
 		pos += received;
 		if (received < chunk_size) {
 			// strip unused chars
@@ -38,6 +42,7 @@ std::string process(SocketImpl& socket, std::string const & string) {
 			break;
 		}
 	}
+	socket.close();
 	return buffer;
 }
 
