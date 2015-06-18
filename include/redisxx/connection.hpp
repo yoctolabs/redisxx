@@ -41,12 +41,13 @@ template <typename SocketImpl>
 #endif
 class Connection {
 	private:
-		SocketImpl socket;
+		std::string const host;
+		std::uint16_t const port;
 		
 	public:
-		template <typename ...Args>
-		Connection(Args&& ...args)
-			: socket{std::forward<Args>(args)...} {
+		Connection(std::string const & host, std::uint16_t port)
+			: host{host}
+			, port{port} {
 		}
 		
 		template <typename Request>
@@ -54,11 +55,14 @@ class Connection {
 			auto string = *request;
 			// note: catch string by value because it's local!
 			return std::async(std::launch::async, [&, string]() {
-				SocketImpl tmp{socket};
-				return Reply{priv::process(tmp, string)};
+				// create dedicated socket for this request
+				SocketImpl socket{host, port};
+				return Reply{priv::process(socket, string)};
 			});
 		}
 };
+
+// tba: add template-specialization for using UnixDomainSocket with ctor(filename)
 
 } // ::redisxx
 

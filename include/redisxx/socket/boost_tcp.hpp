@@ -21,22 +21,13 @@ class BoostTcpSocket {
 		static boost::asio::io_service service;
 		boost::asio::ip::tcp::socket socket;
 		std::string const host;
-		unsigned int port;
+		std::uint16_t const port;
 	
 	public:
-		BoostTcpSocket(std::string const & host, unsigned int port)
+		BoostTcpSocket(std::string const & host, std::uint16_t port)
 			: socket{BoostTcpSocket::service}
 			, host{host}
 			, port{port} {
-		}
-		
-		BoostTcpSocket(BoostTcpSocket const & other)
-			: socket{BoostTcpSocket::service}
-			, host{other.host}
-			, port{other.port} {
-		}
-		
-		void open() {
 			try {
 				boost::asio::ip::tcp::resolver resolver{service};
 				boost::asio::connect(socket, resolver.resolve({host, std::to_string(port)}));
@@ -46,10 +37,6 @@ class BoostTcpSocket {
 			}
 		}
 		
-		void close() {
-			// tba
-		}
-
 		void write(char const * data, std::size_t num_bytes) {
 			try {
 				socket.send(boost::asio::buffer(data, num_bytes));

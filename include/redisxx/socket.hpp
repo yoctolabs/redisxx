@@ -31,7 +31,6 @@ namespace priv {
  */
 template <typename SocketImpl>
 std::string process(SocketImpl& socket, std::string const & request) {
-	socket.open();
 	// write request
 	socket.write(request.c_str(), request.size());
 	// read chunks of the reply
@@ -53,7 +52,6 @@ std::string process(SocketImpl& socket, std::string const & request) {
 			break;
 		}
 	}
-	socket.close();
 	return buffer;
 }
 

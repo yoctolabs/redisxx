@@ -20,30 +20,21 @@ class SfmlTcpSocket {
 	private:
 		sf::TcpSocket socket;
 		std::string const host;
-		unsigned int const port;
+		std::uint16_t const port;
 	
 	public:
-		SfmlTcpSocket(std::string const & host, unsigned int port)
+		SfmlTcpSocket(std::string const & host, std::uint16_t port)
 			: socket{}
 			, host{host}
 			, port{port} {
 			socket.setBlocking(true);
-		}
-		
-		SfmlTcpSocket(SfmlTcpSocket const & other)
-			: socket{}
-			, host{other.host}
-			, port{other.port} {
-		}
-		
-		void open() {
 			auto status = socket.connect(host, port);
 			if (status != sf::Socket::Done) {
 				throw ConnectionError{"Cannot connect", host, port};
 			}
 		}
 		
-		void close() {
+		~SfmlTcpSocket() {
 			socket.disconnect();
 		}
 

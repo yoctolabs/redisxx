@@ -9,17 +9,12 @@ struct MockSocket {
 	std::string buffer;
 	std::size_t pos;
 	
-	MockSocket() {
-	}
-
-	void open() {
+	// host/port ignored here
+	MockSocket(std::string const &, std::uint16_t) {
 		buffer.clear();
 		pos = 0u;
 	}
 	
-	void close() {
-	}
-
 	void write(char const * data, std::size_t num_bytes) {
 		// determine reply
 		std::string tmp{data, num_bytes};
@@ -58,7 +53,7 @@ struct MockSocket {
 BOOST_AUTO_TEST_SUITE(redisxx_test_connection)
 
 BOOST_AUTO_TEST_CASE(connection_socket_ping) {
-	redisxx::Connection<MockSocket> conn; // no host/port required here
+	redisxx::Connection<MockSocket> conn{"", 0}; // host/port ignored by mock
 	auto reply = conn(redisxx::Command("PING")).get();
 	BOOST_CHECK_EQUAL(reply.getRaw(), "+PONG\r\n");
 }
