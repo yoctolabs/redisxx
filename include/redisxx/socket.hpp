@@ -9,6 +9,8 @@
 #pragma once
 #include <string>
 
+#include <redisxx/type_traits.hpp>
+
 // note: user needs to explicitly include a socket wrapper to enable it
 
 namespace redisxx {

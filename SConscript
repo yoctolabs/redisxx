@@ -57,7 +57,12 @@ if ("test" in COMMAND_LINE_TARGETS) | ("coverage" in COMMAND_LINE_TARGETS):
 	if (cxxfiles != []):
 		# For shared libraries
 		# test_libs = [package_name, "boost_unit_test_framework"]
-		test_libs = ["boost_unit_test_framework", "boost_system", "boost_thread"];
+		boost_socket_deps = ["boost_system", "boost_thread"] # including unix domain socket
+		sfml_socket_deps = ["sfml-system", "sfml-network"]
+		
+		test_libs = ["boost_unit_test_framework"]
+		test_libs.extend(boost_socket_deps)
+		test_libs.extend(sfml_socket_deps)
 		test_libs.append(deps_test);
 
 		# attach program to test target
