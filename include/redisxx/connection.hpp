@@ -10,13 +10,12 @@
 #include <string>
 #include <future>
 
-#include <redisxx/type_traits.hpp>
 #include <redisxx/socket.hpp>
 //#include <redisxx/reply.hpp>
 
 namespace redisxx {
 
-// dummy
+// tba: replace with actual reply implementation
 class Reply {
 	private:
 		std::string raw;
@@ -30,31 +29,9 @@ class Reply {
 			return raw;
 		}
 };
-// end dummy
-
-namespace priv {
-
-template <typename SocketImpl>
-typename std::enable_if<is_stream_socket<SocketImpl>::value, Reply>::type
-execute(std::string const & host, std::uint16_t port, std::string const & request) {
-	// create dedicated socket for this request
-	SocketImpl socket{host}; // host contains filename
-	// process request using this socket
-	return {priv::process(socket, request)};
-}
-
-template <typename SocketImpl>
-typename std::enable_if<is_tcp_socket<SocketImpl>::value, Reply>::type
-execute(std::string const & host, std::uint16_t port, std::string const & request) {
-	// create dedicated socket for this request
-	SocketImpl socket{host, port};
-	// process request using this socket
-	return {priv::process(socket, request)};
-}
-
-} //::priv
 
 
+// tba: docs
 #if defined(REDISXX_UNIX_SOCKET)
 template <typename SocketImpl = BoostUnixSocket>
 #elif defined(REDISXX_BOOST_SOCKET)
@@ -70,16 +47,18 @@ class Connection {
 		std::uint16_t const port;
 		
 	public:
+		// tba: docs
 		Connection(std::string const & host, std::uint16_t port=0u)
 			: host{host}
 			, port{port} {
 		}
 		
+		// tba: docs
 		template <typename Request>
 		std::future<Reply> operator()(Request const & request) {
 			auto string = *request;
 			return std::async(std::launch::async, [&, string]() {
-				return priv::execute<SocketImpl>(host, port, string);
+				return Reply{priv::execute<SocketImpl>(host, port, string)};
 			});
 		}
 };

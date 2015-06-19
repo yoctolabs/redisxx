@@ -53,6 +53,26 @@ std::string process(SocketImpl& socket, std::string const & request) {
 	return buffer;
 }
 
+// tba: docs
+template <typename SocketImpl>
+typename std::enable_if<is_stream_socket<SocketImpl>::value, std::string>::type
+execute(std::string const & host, std::uint16_t port, std::string const & request) {
+	// create dedicated socket for this request
+	SocketImpl socket{host}; // host contains filename
+	// process request using this socket
+	return priv::process(socket, request);
+}
+
+// tba: docs
+template <typename SocketImpl>
+typename std::enable_if<is_tcp_socket<SocketImpl>::value, std::string>::type
+execute(std::string const & host, std::uint16_t port, std::string const & request) {
+	// create dedicated socket for this request
+	SocketImpl socket{host, port};
+	// process request using this socket
+	return priv::process(socket, request);
+}
+
 } // ::priv
 } // ::redisxx
 
