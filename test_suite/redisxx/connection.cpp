@@ -42,5 +42,7 @@ BOOST_AUTO_TEST_CASE(connection_sdlnet_tcp_compile_test) {
 	}
 }
 
+// tba: test more !!
+
 BOOST_AUTO_TEST_SUITE_END()
 
