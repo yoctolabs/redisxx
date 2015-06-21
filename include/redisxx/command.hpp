@@ -160,18 +160,18 @@ class CommandList;
  *	Example usage:
  *	@code
  *		// using primitive types / strings
- *		redis::Command cmd{"SET"};
+ *		redisxx::Command cmd{"SET"};
  *		cmd << "my_key" << 5;
  *		// means: "SET my_key 5"
  *
  *		// using a vector
- *		redis::Command cmd2;
+ *		redisxx::Command cmd2;
  *		std::vector<int> numbers = {1, 3, 17, 12, 5};
  *		cmd2 << "SADD" << "ids" << numbers;
  *		// means: "SADD ids 1 3 17 12 5"
  *
  *		// using a map
- *		redis::Command cmd3{"HMSET"};
+ *		redisxx::Command cmd3{"HMSET"};
  *		std::map<std::string, std::string> data;
  *		data["name"]	= "max"
  *		data["passwd"]	= "secret"
@@ -291,17 +291,17 @@ enum class BatchType {
  *
  *	Example usage:
  *	@code
- *		redis::CommandList list;
+ *		redisxx::CommandList list;
  *		list.reserve(5);
  *		for (int i = 0; i < 5; ++i) {
  *			list << redis::Command{"HGETALL", "user:" + std::to_string(i)};
  *		}
  *
- *		redis::CommandList list2;
- *		list2.setBatchType(redis::BatchType::Transaction);
- *		redis::Command cmd{"PING"};
+ *		redisxx::CommandList list2;
+ *		list2.setBatchType(redisxx::BatchType::Transaction);
+ *		redisxx::Command cmd{"PING"};
  *		list2 << cmd << cmd << cmd;
- *		list2.at(1) = redis::Command{"INFO"};
+ *		list2.at(1) = redisxx::Command{"INFO"};
  *	@endcode
  */
 class CommandList: private std::vector<Command> {

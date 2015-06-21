@@ -34,6 +34,10 @@ Boost Aso Unix Domain Socket	| boost_system, boost_thread (1.54)
 Boost Asio TCP Socket			| boost_system, boost_thread (1.54)
 SFML TCP Socket					| sfml-system, sfml-network (2.2)
 
+**Tested Compilers:**
+- *g++*: 4.8.2
+- *clang++*: 3.5.0
+
 **Note:** Linking against *boost_thread* will require to build with **-pthread**
 
 ## How to compile Test-Suite

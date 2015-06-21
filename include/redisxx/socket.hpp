@@ -16,9 +16,9 @@
 namespace redisxx {
 namespace priv {
 
-/// Process a request
+/// Continue processing a request
 /**
- *	This method processes the given request using the given socket. It reads
+ *	This function processes the given request using the given socket. It reads
  *	the entire reply string and returns it. If no reply is available yet, this
  *	function will block until the reply is available.
  *
@@ -28,7 +28,7 @@ namespace priv {
  *	@return Entire reply string
  */
 template <typename SocketImpl>
-std::string process(SocketImpl& socket, std::string const & request) {
+std::string _execute_request(SocketImpl& socket, std::string const & request) {
 	// write request
 	socket.write(request.c_str(), request.size());
 	// read chunks of the reply
@@ -53,24 +53,44 @@ std::string process(SocketImpl& socket, std::string const & request) {
 	return buffer;
 }
 
-// tba: docs
+/// Process a request using the specified Streaming Socket
+/**
+ *	This function creates a new Streaming Socket of the given SocketImpl type
+ *	and use it to process the given request.
+ *
+ *	@throw ConnectionError if an error occured (see _execute_request)
+ *	@param host filename of the streaming socket
+ *	@param port not used here (necessary for API reasons)
+ *	@param request RESP-compliant Request string
+ *	@return Entire reply string
+ */
 template <typename SocketImpl>
 typename std::enable_if<is_stream_socket<SocketImpl>::value, std::string>::type
-execute(std::string const & host, std::uint16_t port, std::string const & request) {
+execute_request(std::string const & host, std::uint16_t port, std::string const & request) {
 	// create dedicated socket for this request
 	SocketImpl socket{host}; // host contains filename
 	// process request using this socket
-	return priv::process(socket, request);
+	return priv::_execute_request(socket, request);
 }
 
-// tba: docs
+/// Process a request using the specified TCP Socket
+/**
+ *	This function creates a new TCP Socket of the given SocketImpl type and use
+ *	it to process the given request.
+ *
+ *	@throw ConnectionError if an error occured (see _execute_request)
+ *	@param host remote host name to access
+ *	@param port remote host's port number to access
+ *	@param request RESP-compliant Request string
+ *	@return Entire reply string
+ */
 template <typename SocketImpl>
 typename std::enable_if<is_tcp_socket<SocketImpl>::value, std::string>::type
-execute(std::string const & host, std::uint16_t port, std::string const & request) {
+execute_request(std::string const & host, std::uint16_t port, std::string const & request) {
 	// create dedicated socket for this request
 	SocketImpl socket{host, port};
 	// process request using this socket
-	return priv::process(socket, request);
+	return priv::_execute_request(socket, request);
 }
 
 } // ::priv

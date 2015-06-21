@@ -8,9 +8,9 @@ struct MockSocket {
 	std::string buffer;
 	std::size_t pos;
 	
-	MockSocket() {
-		buffer.clear();
-		pos = 0u;
+	MockSocket()
+		: buffer{}
+		, pos{0u} {
 	}
 	
 	void write(char const * data, std::size_t num_bytes) {
@@ -68,37 +68,37 @@ BOOST_AUTO_TEST_SUITE(redisxx_test_socket)
 
 BOOST_AUTO_TEST_CASE(process_test_status_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "status");
+	auto out = redisxx::priv::_execute_request(socket, "status");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
 BOOST_AUTO_TEST_CASE(process_test_number_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "number");
+	auto out = redisxx::priv::_execute_request(socket, "number");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
 BOOST_AUTO_TEST_CASE(process_test_bulk_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "bulk");
+	auto out = redisxx::priv::_execute_request(socket, "bulk");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
 BOOST_AUTO_TEST_CASE(process_test_array_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "array");
+	auto out = redisxx::priv::_execute_request(socket, "array");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
 BOOST_AUTO_TEST_CASE(process_test_huge_bulk_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "huge");
+	auto out = redisxx::priv::_execute_request(socket, "huge");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
 BOOST_AUTO_TEST_CASE(process_test_error_string) {
 	MockSocket socket;
-	auto out = redisxx::priv::process(socket, "foo bar");
+	auto out = redisxx::priv::_execute_request(socket, "foo bar");
 	BOOST_CHECK_EQUAL(out, socket.buffer);
 }
 
