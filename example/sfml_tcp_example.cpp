@@ -1,7 +1,6 @@
 // needs to be linke against sfml-system and sfml-network
 #include <iostream>
-#include <redisxx/connection.hpp>
-#include <redisxx/command.hpp>
+#include <redisxx/redisxx.hpp>
 #include <redisxx/socket/sfml_tcp.hpp> // enables Sfml's TcpSocket
 
 int main() {
