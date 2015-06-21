@@ -33,6 +33,7 @@ Unit Testing					| boost_unit_test_framework (1.54)
 Boost Aso Unix Domain Socket	| boost_system, boost_thread (1.54)
 Boost Asio TCP Socket			| boost_system, boost_thread (1.54)
 SFML TCP Socket					| sfml-system, sfml-network (2.2)
+SDLnet TCP Socket				| SDL, SDL_net (1.2.8)
 
 **Tested Compilers:**
 - *g++*: 4.8.2

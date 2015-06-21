@@ -32,6 +32,8 @@ template <typename SocketImpl = BoostUnixSocket>
 template <typename SocketImpl = BoostTcpSocket>
 #elif defined(REDISXX_SFML_SOCKET)
 template <typename SocketImpl = SfmlTcpSocket>
+#elif defined(REDISXX_SDLNET_SOCKET)
+template <typename SocketImpl = SdlNetTcpSocket>
 #else
 template <typename SocketImpl>
 #endif
