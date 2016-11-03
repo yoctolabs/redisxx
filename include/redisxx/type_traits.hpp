@@ -68,6 +68,18 @@ template <typename T, typename Allocator>
 struct is_sequence<std::list<T, Allocator>>: std::true_type {
 };
 
+// ---------------------------------------------------------------------------
+
+// assume each class with ctor(std::string const &) to be a streaming socket
+template <typename T>
+struct is_stream_socket: std::is_constructible<T, std::string const &> {
+};
+
+// assume each class with ctor(std::string const &, std::uint16_t) to be a tcp socket
+template <typename T>
+struct is_tcp_socket: std::is_constructible<T, std::string const &, std::uint16_t> {
+};
+
 } // ::priv
 } // ::redisxx
 

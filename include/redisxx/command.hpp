@@ -20,7 +20,7 @@ namespace priv {
 // API to enable stringification of common non-nested types
 
 // replace bad characters
-std::string stringify(std::string value) {
+inline std::string stringify(std::string value) {
 	// tba: escape '\r' and '\n'
 	return value;
 }
@@ -37,13 +37,13 @@ stringify(T value) {
 // API to apply protocol specifications to various types
 
 // map string to bulk string
-std::string protocolify(std::size_t& num, std::string const & value) {
+inline std::string protocolify(std::size_t& num, std::string const & value) {
 	++num;
 	return '$' + std::to_string(value.size()) + "\r\n" + value + "\r\n";
 }
 
 // map nullptr_t to null
-std::string protocolify(std::size_t& num, std::nullptr_t ptr) {
+inline std::string protocolify(std::size_t& num, std::nullptr_t ptr) {
 	++num;
 	return "$-1\r\n";
 }
@@ -160,18 +160,18 @@ class CommandList;
  *	Example usage:
  *	@code
  *		// using primitive types / strings
- *		redis::Command cmd{"SET"};
+ *		redisxx::Command cmd{"SET"};
  *		cmd << "my_key" << 5;
  *		// means: "SET my_key 5"
  *
  *		// using a vector
- *		redis::Command cmd2;
+ *		redisxx::Command cmd2;
  *		std::vector<int> numbers = {1, 3, 17, 12, 5};
  *		cmd2 << "SADD" << "ids" << numbers;
  *		// means: "SADD ids 1 3 17 12 5"
  *
  *		// using a map
- *		redis::Command cmd3{"HMSET"};
+ *		redisxx::Command cmd3{"HMSET"};
  *		std::map<std::string, std::string> data;
  *		data["name"]	= "max"
  *		data["passwd"]	= "secret"
@@ -254,7 +254,7 @@ Command& operator<<(Command& cmd, T&& value) {
  *	@param rhs Right-hand-side command object
  *	@return True if both objects equal
  */
-bool operator==(Command const & lhs, Command const & rhs) {
+inline bool operator==(Command const & lhs, Command const & rhs) {
 	return (lhs.buffer == rhs.buffer && lhs.num_bulks == rhs.num_bulks);
 }
 
@@ -267,7 +267,7 @@ bool operator==(Command const & lhs, Command const & rhs) {
  *	@param rhs Right-hand-side command object
  *	@return True if both objects do not equal
  */
-bool operator!=(Command const & lhs, Command const & rhs) {
+inline bool operator!=(Command const & lhs, Command const & rhs) {
 	return (lhs.num_bulks != rhs.num_bulks || lhs.buffer != rhs.buffer);
 }
 
@@ -291,17 +291,17 @@ enum class BatchType {
  *
  *	Example usage:
  *	@code
- *		redis::CommandList list;
+ *		redisxx::CommandList list;
  *		list.reserve(5);
  *		for (int i = 0; i < 5; ++i) {
  *			list << redis::Command{"HGETALL", "user:" + std::to_string(i)};
  *		}
  *
- *		redis::CommandList list2;
- *		list2.setBatchType(redis::BatchType::Transaction);
- *		redis::Command cmd{"PING"};
+ *		redisxx::CommandList list2;
+ *		list2.setBatchType(redisxx::BatchType::Transaction);
+ *		redisxx::Command cmd{"PING"};
  *		list2 << cmd << cmd << cmd;
- *		list2.at(1) = redis::Command{"INFO"};
+ *		list2.at(1) = redisxx::Command{"INFO"};
  *	@endcode
  */
 class CommandList: private std::vector<Command> {
@@ -407,7 +407,7 @@ class CommandList: private std::vector<Command> {
  *	@param cmd Command to append to the list
  *	@param return The given command list.
  */
-CommandList& operator<<(CommandList& list, Command const & cmd) {
+inline CommandList& operator<<(CommandList& list, Command const & cmd) {
 	list.push_back(cmd);
 	return list;
 }
